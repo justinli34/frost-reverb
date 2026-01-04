@@ -91,12 +91,18 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     // 1. Prepare the Pitch Shifter (Signalsmith Stretch)
     int numChannels = getTotalNumInputChannels();
     
-    // Configure for stereo (or mono if that's what you have)
-    // Using a 'cheaper' preset for lower CPU usage, as reverb tails hide artifacts well.
-    shimmerShifter.presetCheaper(numChannels, sampleRate);
+    // 2048 samples is approx 46ms at 44.1kHz.
+    // This is much tighter than the default ~100ms.
+    int blockSamples = 2048;
+    
+    // The hop size (interval). 1/4 of the block size is standard overlap.
+    int intervalSamples = blockSamples / 4;
+    
+    // Configure manually: (channels, blockSamples, intervalSamples, splitComputation)
+    shimmerShifter.configure(numChannels, blockSamples, intervalSamples, false);
     
     // Set Harmonic Interval: +12 Semitones (1 Octave)
-    shimmerShifter.setTransposeSemitones(12); 
+    shimmerShifter.setTransposeSemitones(12);
 
     // 2. Prepare the Reverb
     reverb.setSampleRate(sampleRate);
