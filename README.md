@@ -1,6 +1,6 @@
 # Bam Plugin
 
-Harmonic reverb effect plugin.
+Shimmer reverb effect plugin.
 
 ## Instructions
 
