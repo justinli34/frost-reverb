@@ -10,7 +10,8 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
+       apvts (*this, nullptr, "Parameters", createParameterLayout())
 {
 }
 
@@ -89,7 +90,6 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     int blockSamples = 2048;
     int intervalSamples = blockSamples / 4;
     shimmerShifter.configure(numChannels, blockSamples, intervalSamples, false);
-    shimmerShifter.setTransposeSemitones(12);
 
     reverb.setSampleRate(sampleRate);
     reverbParams.roomSize = 0.9f;
@@ -158,6 +158,8 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     }
 
     // Pitch shift
+    float transposeValue = *apvts.getRawParameterValue("transpose");
+    shimmerShifter.setTransposeSemitones(transposeValue);
     shimmerShifter.process(inputPtrs, numSamples, wetPtrs, numSamples);
 
     // Reverb
@@ -208,4 +210,17 @@ void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeI
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new AudioPluginAudioProcessor();
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "transpose", 
+        "Transpose", 
+        juce::NormalisableRange<float>(-12.0f, 12.0f, 1.0f),
+        12.0f));
+
+    return layout;
 }
