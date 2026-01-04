@@ -88,9 +88,31 @@ void AudioPluginAudioProcessor::changeProgramName (int index, const juce::String
 //==============================================================================
 void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    juce::ignoreUnused (sampleRate, samplesPerBlock);
+    // 1. Prepare the Pitch Shifter (Signalsmith Stretch)
+    int numChannels = getTotalNumInputChannels();
+    
+    // Configure for stereo (or mono if that's what you have)
+    // Using a 'cheaper' preset for lower CPU usage, as reverb tails hide artifacts well.
+    shimmerShifter.presetCheaper(numChannels, sampleRate);
+    
+    // Set Harmonic Interval: +12 Semitones (1 Octave)
+    shimmerShifter.setTransposeSemitones(12); 
+
+    // 2. Prepare the Reverb
+    reverb.setSampleRate(sampleRate);
+    
+    // Configure Reverb "Lushness"
+    reverbParams.roomSize = 0.9f;   // Large room for "infinite" feel
+    reverbParams.damping = 0.3f;    // Low damping for bright shimmer
+    reverbParams.wetLevel = 1.0f;   // We handle the mix manually
+    reverbParams.dryLevel = 0.0f;   // Ensure reverb output is 100% wet
+    reverbParams.width = 1.0f;
+    reverbParams.freezeMode = 0.0f;
+    reverb.setParameters(reverbParams);
+
+    // 3. Prepare Intermediate Buffer
+    // Resize wetBuffer to match the block size and channels
+    wetBuffer.setSize(numChannels, samplesPerBlock);
 }
 
 void AudioPluginAudioProcessor::releaseResources()
@@ -127,31 +149,61 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused (midiMessages);
-
     juce::ScopedNoDenormals noDenormals;
+    
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
+    int numSamples = buffer.getNumSamples();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
+    // Clear unused output channels
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear (i, 0, numSamples);
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    // --- HARMONIC REVERB PROCESSING ---
+
+    // 1. Prepare the Wet Buffer
+    // We copy the dry input to the wet buffer temporarily if needed, 
+    // but the shifter will overwrite it anyway. 
+    // However, we must ensure wetBuffer is big enough (handled in prepareToPlay).
+    if (wetBuffer.getNumSamples() != numSamples)
+        wetBuffer.setSize(totalNumInputChannels, numSamples, false, false, true);
+    
+    wetBuffer.clear();
+
+    // 2. Interface with Signalsmith Stretch
+    // The library uses float** style access, so we create channel pointers.
+    std::vector<const float*> inputPtrs(totalNumInputChannels);
+    std::vector<float*> wetPtrs(totalNumInputChannels);
+
+    for (int c = 0; c < totalNumInputChannels; ++c)
     {
-        auto* channelData = buffer.getWritePointer (channel);
-        juce::ignoreUnused (channelData);
-        // ..do something to the data...
+        inputPtrs[c] = buffer.getReadPointer(c);
+        wetPtrs[c] = wetBuffer.getWritePointer(c);
+    }
+
+    // 3. Process Pitch Shift (Input -> WetBuffer)
+    // This takes the dry input, shifts it up an octave, and stores it in wetBuffer.
+    shimmerShifter.process(inputPtrs, numSamples, wetPtrs, numSamples);
+
+    // 4. Process Reverb (WetBuffer -> WetBuffer)
+    // Apply reverb to the pitch-shifted signal.
+    if (totalNumInputChannels == 2)
+    {
+        reverb.processStereo(wetBuffer.getWritePointer(0), wetBuffer.getWritePointer(1), numSamples);
+    }
+    else if (totalNumInputChannels == 1)
+    {
+        reverb.processMono(wetBuffer.getWritePointer(0), numSamples);
+    }
+
+    // 5. Mix Wet Signal back into Main Buffer
+    // We blend the original Dry signal (in 'buffer') with the Shimmer Reverb (in 'wetBuffer')
+    float shimmerAmount = 0.5f; // Adjust this gain for more/less shimmer
+    
+    for (int c = 0; c < totalNumInputChannels; ++c)
+    {
+        // buffer = buffer + (wetBuffer * gain)
+        buffer.addFrom(c, 0, wetBuffer, c, 0, numSamples, shimmerAmount);
     }
 }
 
