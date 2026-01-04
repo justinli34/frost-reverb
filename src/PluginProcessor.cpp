@@ -186,11 +186,11 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     }
 
     // Mix wet signal into main buffer
-    float shimmerAmount = 0.5f;
+    float mixAmount = *apvts.getRawParameterValue("mix");
     
     for (int c = 0; c < totalNumInputChannels; ++c)
     {
-        buffer.addFrom(c, 0, wetBuffer, c, 0, numSamples, shimmerAmount);
+        buffer.addFrom(c, 0, wetBuffer, c, 0, numSamples, mixAmount);
     }
 }
 
@@ -240,6 +240,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         "Shift 2", 
         juce::NormalisableRange<float>(-12.0f, 24.0f, 1.0f),
         12.0f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "mix", 
+        "Mix", 
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.1f),
+        0.5f));
 
     return layout;
 }

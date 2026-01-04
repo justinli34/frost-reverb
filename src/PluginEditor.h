@@ -18,11 +18,15 @@ private:
 
     juce::Slider shiftSlider1;
     juce::Label shiftLabel1;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> shiftAttachment1;
+
     juce::Slider shiftSlider2;
     juce::Label shiftLabel2;
-
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> shiftAttachment1;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> shiftAttachment2;
+
+    juce::Slider mixSlider;
+    juce::Label mixLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mixAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessorEditor)
 };
