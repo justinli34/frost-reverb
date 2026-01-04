@@ -93,11 +93,11 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     shifter2.configure(numChannels, blockSamples, intervalSamples, false);
 
     reverb.setSampleRate(sampleRate);
-    reverbParams.roomSize = 0.9f;
+    reverbParams.roomSize = 0.8f;
     reverbParams.damping = 0.3f;
     reverbParams.wetLevel = 1.0f;
     reverbParams.dryLevel = 0.0f;
-    reverbParams.width = 1.0f;
+    reverbParams.width = 0.9f;
     reverbParams.freezeMode = 0.0f;
     reverb.setParameters(reverbParams);
 
@@ -233,7 +233,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
         "shift1", 
         "Shift 1", 
         juce::NormalisableRange<float>(-12.0f, 24.0f, 1.0f),
-        12.0f));
+        0.0f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "shift2", 
