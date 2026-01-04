@@ -1,6 +1,6 @@
-# Bam Plugin
+# Frost Reverb
 
-Shimmer reverb effect plugin.
+Shimmer reverb plugin.
 
 ## Instructions
 
@@ -15,4 +15,4 @@ Shimmer reverb effect plugin.
     ```
 2. Run `cmake -B build`
 3. Run `cmake --build build --config Release`
-4. VST3 file and standalone exe will be in `build/BamPlugin_artefacts/Release/`
+4. VST3 file (folder) and standalone executable will be in `build\FrostReverb_artefacts\Release`
