@@ -1,9 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-
 #include "signalsmith/signalsmith-stretch.h"
 
-//==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -20,7 +18,6 @@ AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
 {
 }
 
-//==============================================================================
 const juce::String AudioPluginAudioProcessor::getName() const
 {
     return JucePlugin_Name;
@@ -85,39 +82,24 @@ void AudioPluginAudioProcessor::changeProgramName (int index, const juce::String
     juce::ignoreUnused (index, newName);
 }
 
-//==============================================================================
 void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // 1. Prepare the Pitch Shifter (Signalsmith Stretch)
     int numChannels = getTotalNumInputChannels();
-    
-    // 2048 samples is approx 46ms at 44.1kHz.
-    // This is much tighter than the default ~100ms.
+
     int blockSamples = 2048;
-    
-    // The hop size (interval). 1/4 of the block size is standard overlap.
     int intervalSamples = blockSamples / 4;
-    
-    // Configure manually: (channels, blockSamples, intervalSamples, splitComputation)
     shimmerShifter.configure(numChannels, blockSamples, intervalSamples, false);
-    
-    // Set Harmonic Interval: +12 Semitones (1 Octave)
     shimmerShifter.setTransposeSemitones(12);
 
-    // 2. Prepare the Reverb
     reverb.setSampleRate(sampleRate);
-    
-    // Configure Reverb "Lushness"
-    reverbParams.roomSize = 0.9f;   // Large room for "infinite" feel
-    reverbParams.damping = 0.3f;    // Low damping for bright shimmer
-    reverbParams.wetLevel = 1.0f;   // We handle the mix manually
-    reverbParams.dryLevel = 0.0f;   // Ensure reverb output is 100% wet
+    reverbParams.roomSize = 0.9f;
+    reverbParams.damping = 0.3f;
+    reverbParams.wetLevel = 1.0f;
+    reverbParams.dryLevel = 0.0f;
     reverbParams.width = 1.0f;
     reverbParams.freezeMode = 0.0f;
     reverb.setParameters(reverbParams);
 
-    // 3. Prepare Intermediate Buffer
-    // Resize wetBuffer to match the block size and channels
     wetBuffer.setSize(numChannels, samplesPerBlock);
 }
 
@@ -165,19 +147,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, numSamples);
 
-    // --- HARMONIC REVERB PROCESSING ---
-
-    // 1. Prepare the Wet Buffer
-    // We copy the dry input to the wet buffer temporarily if needed, 
-    // but the shifter will overwrite it anyway. 
-    // However, we must ensure wetBuffer is big enough (handled in prepareToPlay).
-    if (wetBuffer.getNumSamples() != numSamples)
-        wetBuffer.setSize(totalNumInputChannels, numSamples, false, false, true);
-    
-    wetBuffer.clear();
-
-    // 2. Interface with Signalsmith Stretch
-    // The library uses float** style access, so we create channel pointers.
+    // Get pointers to input and wet buffers
     std::vector<const float*> inputPtrs(totalNumInputChannels);
     std::vector<float*> wetPtrs(totalNumInputChannels);
 
@@ -187,12 +157,10 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         wetPtrs[c] = wetBuffer.getWritePointer(c);
     }
 
-    // 3. Process Pitch Shift (Input -> WetBuffer)
-    // This takes the dry input, shifts it up an octave, and stores it in wetBuffer.
+    // Pitch shift
     shimmerShifter.process(inputPtrs, numSamples, wetPtrs, numSamples);
 
-    // 4. Process Reverb (WetBuffer -> WetBuffer)
-    // Apply reverb to the pitch-shifted signal.
+    // Reverb
     if (totalNumInputChannels == 2)
     {
         reverb.processStereo(wetBuffer.getWritePointer(0), wetBuffer.getWritePointer(1), numSamples);
@@ -202,21 +170,18 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         reverb.processMono(wetBuffer.getWritePointer(0), numSamples);
     }
 
-    // 5. Mix Wet Signal back into Main Buffer
-    // We blend the original Dry signal (in 'buffer') with the Shimmer Reverb (in 'wetBuffer')
-    float shimmerAmount = 0.5f; // Adjust this gain for more/less shimmer
+    // Mix wet signal into main buffer
+    float shimmerAmount = 0.5f;
     
     for (int c = 0; c < totalNumInputChannels; ++c)
     {
-        // buffer = buffer + (wetBuffer * gain)
         buffer.addFrom(c, 0, wetBuffer, c, 0, numSamples, shimmerAmount);
     }
 }
 
-//==============================================================================
 bool AudioPluginAudioProcessor::hasEditor() const
 {
-    return true; // (change this to false if you choose to not supply an editor)
+    return true;
 }
 
 juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor()
@@ -224,7 +189,6 @@ juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor()
     return new AudioPluginAudioProcessorEditor (*this);
 }
 
-//==============================================================================
 void AudioPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
@@ -240,7 +204,6 @@ void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeI
     juce::ignoreUnused (data, sizeInBytes);
 }
 
-//==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
