@@ -89,7 +89,8 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
     int blockSamples = 2048;
     int intervalSamples = blockSamples / 4;
-    shimmerShifter.configure(numChannels, blockSamples, intervalSamples, false);
+    shifter1.configure(numChannels, blockSamples, intervalSamples, false);
+    shifter2.configure(numChannels, blockSamples, intervalSamples, false);
 
     reverb.setSampleRate(sampleRate);
     reverbParams.roomSize = 0.9f;
@@ -101,6 +102,7 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     reverb.setParameters(reverbParams);
 
     wetBuffer.setSize(numChannels, samplesPerBlock);
+    tempBuffer.setSize(numChannels, samplesPerBlock);
 }
 
 void AudioPluginAudioProcessor::releaseResources()
@@ -147,20 +149,31 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, numSamples);
 
-    // Get pointers to input and wet buffers
-    std::vector<const float*> inputPtrs(totalNumInputChannels);
-    std::vector<float*> wetPtrs(totalNumInputChannels);
+    // Pointers for signalsmith
+    std::vector<const float*> sourcePtrs(totalNumInputChannels);
+    std::vector<float*> shift1Ptrs(totalNumInputChannels);
+    std::vector<float*> shift2Ptrs(totalNumInputChannels);
 
     for (int c = 0; c < totalNumInputChannels; ++c)
     {
-        inputPtrs[c] = buffer.getReadPointer(c);
-        wetPtrs[c] = wetBuffer.getWritePointer(c);
+        sourcePtrs[c] = buffer.getReadPointer(c);
+        shift1Ptrs[c] = tempBuffer.getWritePointer(c);
+        shift2Ptrs[c] = wetBuffer.getWritePointer(c);
     }
 
     // Pitch shift
-    float transposeValue = *apvts.getRawParameterValue("transpose");
-    shimmerShifter.setTransposeSemitones(transposeValue);
-    shimmerShifter.process(inputPtrs, numSamples, wetPtrs, numSamples);
+    float shiftValue1 = *apvts.getRawParameterValue("shift1");
+    float shiftValue2 = *apvts.getRawParameterValue("shift2");
+    shifter1.setTransposeSemitones(shiftValue1);
+    shifter2.setTransposeSemitones(shiftValue2);
+
+    shifter1.process(sourcePtrs, numSamples, shift1Ptrs, numSamples);
+    shifter2.process(sourcePtrs, numSamples, shift2Ptrs, numSamples);
+
+    for (int c = 0; c < totalNumInputChannels; ++c)
+    {
+        wetBuffer.addFrom(c, 0, tempBuffer, c, 0, numSamples, 1.0f);
+    }
 
     // Reverb
     if (totalNumInputChannels == 2)
@@ -217,9 +230,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "transpose", 
-        "Transpose", 
-        juce::NormalisableRange<float>(-12.0f, 12.0f, 1.0f),
+        "shift1", 
+        "Shift 1", 
+        juce::NormalisableRange<float>(-12.0f, 24.0f, 1.0f),
+        12.0f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "shift2", 
+        "Shift 2", 
+        juce::NormalisableRange<float>(-12.0f, 24.0f, 1.0f),
         12.0f));
 
     return layout;

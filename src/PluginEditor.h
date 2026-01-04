@@ -16,10 +16,13 @@ private:
     // access the processor object that created it.
     AudioPluginAudioProcessor& processorRef;
 
-    juce::Slider transposeSlider;
-    juce::Label transposeLabel;
+    juce::Slider shiftSlider1;
+    juce::Label shiftLabel1;
+    juce::Slider shiftSlider2;
+    juce::Label shiftLabel2;
 
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> transposeAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> shiftAttachment1;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> shiftAttachment2;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessorEditor)
 };

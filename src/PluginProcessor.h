@@ -42,12 +42,13 @@ public:
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     
-    signalsmith::stretch::SignalsmithStretch<float> shimmerShifter;
+    signalsmith::stretch::SignalsmithStretch<float> shifter1;
+    signalsmith::stretch::SignalsmithStretch<float> shifter2;
     juce::Reverb reverb;
     juce::Reverb::Parameters reverbParams;
     
-    // A separate buffer to process the Wet/Shimmer path without overwriting the Dry input
     juce::AudioBuffer<float> wetBuffer;
+    juce::AudioBuffer<float> tempBuffer;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };

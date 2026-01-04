@@ -6,20 +6,30 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
 {
     juce::ignoreUnused (processorRef);
     
-    transposeSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    transposeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
-    addAndMakeVisible(transposeSlider);
+    shiftSlider1.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    shiftSlider1.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+    addAndMakeVisible(shiftSlider1);
 
-    transposeLabel.setText("Shift (Semi)", juce::NotificationType::dontSendNotification);
-    transposeLabel.setJustificationType(juce::Justification::centred);
-    transposeLabel.attachToComponent(&transposeSlider, false); // Attach above slider
-    addAndMakeVisible(transposeLabel);
+    shiftLabel1.setText("Pitch (Semitones)", juce::NotificationType::dontSendNotification);
+    shiftLabel1.setJustificationType(juce::Justification::centred);
+    shiftLabel1.attachToComponent(&shiftSlider1, false); // Attach above slider
+    addAndMakeVisible(shiftLabel1);
 
-    // 3. Create Attachment
-    // This links the slider to the "transpose" parameter ID we defined in the processor
-    transposeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-        processorRef.apvts, "transpose", transposeSlider);
-    
+    shiftAttachment1 = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        processorRef.apvts, "shift1", shiftSlider1);
+
+    shiftSlider2.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    shiftSlider2.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+    addAndMakeVisible(shiftSlider2);
+
+    shiftLabel2.setText("Pitch (Semitones)", juce::NotificationType::dontSendNotification);
+    shiftLabel2.setJustificationType(juce::Justification::centred);
+    shiftLabel2.attachToComponent(&shiftSlider2, false); // Attach above slider
+    addAndMakeVisible(shiftLabel2);
+
+    shiftAttachment2 = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        processorRef.apvts, "shift2", shiftSlider2);
+
     setSize (400, 300);
 }
 
@@ -38,7 +48,11 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
 
 void AudioPluginAudioProcessorEditor::resized()
 {
-    transposeSlider.setBounds(getLocalBounds().getCentreX() - 50, 
+    shiftSlider1.setBounds(getLocalBounds().getCentreX() - 100, 
+                              getLocalBounds().getCentreY() - 50, 
+                              100, 100);
+
+    shiftSlider2.setBounds(getLocalBounds().getCentreX(), 
                               getLocalBounds().getCentreY() - 50, 
                               100, 100);
 }
