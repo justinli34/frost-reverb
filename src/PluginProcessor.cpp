@@ -157,22 +157,33 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (int c = 0; c < totalNumInputChannels; ++c)
     {
         sourcePtrs[c] = buffer.getReadPointer(c);
-        shift1Ptrs[c] = tempBuffer.getWritePointer(c);
-        shift2Ptrs[c] = wetBuffer.getWritePointer(c);
+        shift1Ptrs[c] = wetBuffer.getWritePointer(c);
+        shift2Ptrs[c] = tempBuffer.getWritePointer(c);
     }
 
     // Pitch shift
-    float shiftValue1 = *apvts.getRawParameterValue("shift1");
-    float shiftValue2 = *apvts.getRawParameterValue("shift2");
-    shifter1.setTransposeSemitones(shiftValue1);
-    shifter2.setTransposeSemitones(shiftValue2);
+    wetBuffer.clear();
 
-    shifter1.process(sourcePtrs, numSamples, shift1Ptrs, numSamples);
-    shifter2.process(sourcePtrs, numSamples, shift2Ptrs, numSamples);
+    bool shift1On = apvts.getRawParameterValue("shift1On")->load();
+    bool shift2On = apvts.getRawParameterValue("shift2On")->load();
 
-    for (int c = 0; c < totalNumInputChannels; ++c)
+    if (shift1On)
     {
-        wetBuffer.addFrom(c, 0, tempBuffer, c, 0, numSamples, 1.0f);
+        float shiftValue1 = *apvts.getRawParameterValue("shift1");
+        shifter1.setTransposeSemitones(shiftValue1);
+        shifter1.process(sourcePtrs, numSamples, shift1Ptrs, numSamples);
+    }
+
+    if (shift2On)
+    {
+        float shiftValue2 = *apvts.getRawParameterValue("shift2");
+        shifter2.setTransposeSemitones(shiftValue2);
+        shifter2.process(sourcePtrs, numSamples, shift2Ptrs, numSamples);
+
+        for (int c = 0; c < totalNumInputChannels; ++c)
+        {
+            wetBuffer.addFrom(c, 0, tempBuffer, c, 0, numSamples, 1.0f);
+        }
     }
 
     // Reverb
@@ -230,20 +241,30 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "shift1", 
-        "Shift 1", 
+        "shift1",
+        "Shift 1",
         juce::NormalisableRange<float>(-12.0f, 24.0f, 1.0f),
         0.0f));
 
+    layout.add(std::make_unique<juce::AudioParameterBool>(
+        "shift1On",
+        "Shift 1 On",
+        true));
+
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "shift2", 
-        "Shift 2", 
+        "shift2",
+        "Shift 2",
         juce::NormalisableRange<float>(-12.0f, 24.0f, 1.0f),
         12.0f));
 
+    layout.add(std::make_unique<juce::AudioParameterBool>(
+        "shift2On",
+        "Shift 2 On",
+        true));
+
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "mix", 
-        "Mix", 
+        "mix",
+        "Mix",
         juce::NormalisableRange<float>(0.0f, 1.0f, 0.1f),
         0.5f));
 

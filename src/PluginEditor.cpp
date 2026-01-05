@@ -19,6 +19,13 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     shiftAttachment1 = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         processorRef.apvts, "shift1", shiftSlider1);
 
+    // Shift Toggle 1
+    shift1Toggle.setButtonText("On/Off");
+    addAndMakeVisible(shift1Toggle);
+
+    shift1ToggleAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        processorRef.apvts, "shift1On", shift1Toggle);
+
     // Shift Slider 2
     shiftSlider2.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     shiftSlider2.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
@@ -31,6 +38,13 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
 
     shiftAttachment2 = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         processorRef.apvts, "shift2", shiftSlider2);
+
+    // Shift Toggle 2
+    shift2Toggle.setButtonText("On/Off");
+    addAndMakeVisible(shift2Toggle);
+
+    shift2ToggleAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        processorRef.apvts, "shift2On", shift2Toggle);
 
     // Mix Slider
     mixSlider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -66,7 +80,15 @@ void AudioPluginAudioProcessorEditor::resized()
                               getLocalBounds().getCentreY() - 100,
                               100, 100);
 
+    shift1Toggle.setBounds(getLocalBounds().getCentreX() - 200,
+                              getLocalBounds().getCentreY() - 100,
+                              100, 100);
+
     shiftSlider2.setBounds(getLocalBounds().getCentreX(),
+                              getLocalBounds().getCentreY() - 100,
+                              100, 100);
+
+    shift2Toggle.setBounds(getLocalBounds().getCentreX() + 100,
                               getLocalBounds().getCentreY() - 100,
                               100, 100);
 
