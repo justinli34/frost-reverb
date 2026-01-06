@@ -1,18 +1,22 @@
-# Frost Reverb
+# ❄ Frost Reverb
 
-Shimmer reverb plugin.
+Shimmer reverb audio effect plugin.
 
-## Instructions
+## Build Instructions
 
-### Prerequisites
-- JUCE installed
+Clone the repo:
+```
+git clone --recurse-submodules https://github.com/justinli34/frost-reverb.git
+```
 
-### Build
+Generate build files:
+```
+cmake -B build
+```
 
-1. Update path to JUCE on this line in `CMakeLists.txt`
-    ```
-    add_subdirectory("C:/JUCE" "JUCE")
-    ```
-2. Run `cmake -B build`
-3. Run `cmake --build build --config Release`
-4. VST3 file (folder) and standalone executable will be in `build\FrostReverb_artefacts\Release`
+Compile:
+```
+cmake --build build --config Release
+```
+
+VST3 folder and standalone executable will be created in `build\FrostReverb_artefacts\Release`
