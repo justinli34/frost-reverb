@@ -5,21 +5,21 @@ Shimmer reverb audio effect plugin.
 ## Build Instructions
 
 Clone the repo:
-```
+```sh
 git clone --recurse-submodules https://github.com/justinli34/frost-reverb.git
 ```
 
 Generate build files:
-```
-cmake -B build
+```sh
+cmake -B build -DCMAKE_BUILD_TYPE=Release
 ```
 
 Compile:
-```
+```sh
 cmake --build build --config Release
 ```
 
-VST3 folder and standalone executable will be created in `build\FrostReverb_artefacts\Release`
+VST3, AU (if on Mac), and standalone executable will be created in `build\FrostReverb_artefacts\Release`.
 
 ## License
 
