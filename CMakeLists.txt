@@ -21,7 +21,11 @@ juce_add_plugin(FrostReverb
     PLUGIN_MANUFACTURER_CODE JuLi
     PLUGIN_CODE Fre1
     FORMATS AU VST3 Standalone
-    PRODUCT_NAME "Frost Reverb")
+    PRODUCT_NAME "Frost Reverb"
+    
+    # For macOS standalone
+    MICROPHONE_PERMISSION_ENABLED TRUE
+    MICROPHONE_PERMISSION_TEXT "FrostReverb needs microphone access to process audio input.")
 
 juce_generate_juce_header(FrostReverb)
 
