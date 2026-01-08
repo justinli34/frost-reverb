@@ -1,0 +1,63 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Build plugin
+        run: make build
+      
+      - name: Package artifacts (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          mkdir -p release
+          cp -r build/FrostReverb_artefacts/Release/VST3/* release/
+          cp -r build/FrostReverb_artefacts/Release/AU/* release/
+          cp -r build/FrostReverb_artefacts/Release/Standalone/*.app release/
+          cd release && zip -r macos-plugin.zip *
+      
+      - name: Package artifacts (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir release
+          Copy-Item -Path "build\FrostReverb_artefacts\Release\VST3\*" -Destination release -Recurse
+          Copy-Item -Path "build\FrostReverb_artefacts\Release\Standalone\*.exe" -Destination release
+          Compress-Archive -Path release\* -DestinationPath release\windows-plugin.zip
+        shell: powershell
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-${{ matrix.os }}
+          path: release/*
+  
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            plugin-macos-latest/*.zip
+            plugin-windows-latest/*.zip
