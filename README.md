@@ -9,17 +9,12 @@ Clone the repo:
 git clone --recurse-submodules https://github.com/justinli34/frost-reverb.git
 ```
 
-Generate build files:
+Configure the project, generate build files, and compile:
 ```sh
-cmake -B build -DCMAKE_BUILD_TYPE=Release
+make build
 ```
 
-Compile:
-```sh
-cmake --build build --config Release
-```
-
-VST3, AU (if on Mac), and standalone executable will be created in `build\FrostReverb_artefacts\Release`.
+VST3, AU (if on Mac), and standalone executable will be created in `build/FrostReverb_artefacts/Release/`.
 
 ## License
 
