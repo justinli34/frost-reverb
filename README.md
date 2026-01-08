@@ -1,6 +1,17 @@
 # ❄ Frost Reverb
 
-Shimmer reverb audio effect plugin.
+Shimmer reverb audio effect plugin. Adds two adjustable pitch-shifted layers, passes them through reverb, and combines with the original dry signal.
+
+## Download Instructions
+
+You can download the plugin for Windows and macOS through the [GitHub releases](https://github.com/justinli34/frost-reverb/releases).
+
+Note: For macOS you will need to run this command in your terminal after unzipping to remove Apple's quarantine attribute since the programs are unsigned:
+```sh
+xattr -cr /path/to/FrostReverb-v0.0.1-macOS-Universal  # Replace version with your version
+```
+
+Alternatively, you can follow the build instructions below to build the app from scratch.
 
 ## Build Instructions
 
