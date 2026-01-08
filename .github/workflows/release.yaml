@@ -11,6 +11,11 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, windows-latest]
+        include:
+          - os: macos-latest
+            cmake_flags: '-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"'
+          - os: windows-latest
+            cmake_flags: ''
     
     steps:
       - name: Checkout code
@@ -19,7 +24,9 @@ jobs:
           submodules: recursive
       
       - name: Build plugin
-        run: make build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_flags }}
+          cmake --build build --config Release --parallel
       
       - name: Package artifacts (macOS)
         if: matrix.os == 'macos-latest'
@@ -28,7 +35,7 @@ jobs:
           cp -r build/FrostReverb_artefacts/Release/VST3/* release/
           cp -r build/FrostReverb_artefacts/Release/AU/* release/
           cp -r build/FrostReverb_artefacts/Release/Standalone/*.app release/
-          cd release && zip -r macos-plugin.zip *
+          cd release && zip -r FrostReverb-${{ github.ref_name }}-macOS-Universal.zip *
       
       - name: Package artifacts (Windows)
         if: matrix.os == 'windows-latest'
@@ -36,7 +43,7 @@ jobs:
           mkdir release
           Copy-Item -Path "build\FrostReverb_artefacts\Release\VST3\*" -Destination release -Recurse
           Copy-Item -Path "build\FrostReverb_artefacts\Release\Standalone\*.exe" -Destination release
-          Compress-Archive -Path release\* -DestinationPath release\windows-plugin.zip
+          Compress-Archive -Path release\* -DestinationPath release\FrostReverb-${{ github.ref_name }}-Windows-x64.zip
         shell: powershell
       
       - name: Upload artifacts
@@ -59,5 +66,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            plugin-macos-latest/*.zip
-            plugin-windows-latest/*.zip
+            plugin-macos-latest/*-Universal.zip
+            plugin-windows-latest/*-x64.zip
