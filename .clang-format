@@ -1,0 +1,8 @@
+Language: Cpp
+BasedOnStyle: WebKit
+
+BreakBeforeBraces: Attach
+ColumnLimit: 120
+AlignAfterOpenBracket: BlockIndent
+PenaltyBreakAssignment: 100
+AllowShortFunctionsOnASingleLine: Empty
