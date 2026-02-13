@@ -4,7 +4,7 @@ Shimmer reverb audio effect plugin. Adds two adjustable pitch-shifted layers, pa
 
 ## Download Instructions
 
-You can download the plugin for Windows and macOS through the [GitHub releases](https://github.com/justinli34/frost-reverb/releases).
+You can download the plugin for Windows and macOS through the [GitHub releases](https://github.com/resonatrics/frost-reverb/releases).
 
 Note: For macOS you will need to run this command in your terminal after unzipping to remove Apple's quarantine attribute since the programs are unsigned:
 ```sh
@@ -17,7 +17,7 @@ Alternatively, you can follow the build instructions below to build the app from
 
 Clone the repo:
 ```sh
-git clone --recurse-submodules https://github.com/justinli34/frost-reverb.git
+git clone --recurse-submodules https://github.com/resonatrics/frost-reverb.git
 ```
 
 Configure the project, generate build files, and compile:
